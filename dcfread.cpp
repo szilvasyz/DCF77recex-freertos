@@ -1,6 +1,15 @@
 #include "common.h"
 
 
+void initDcf() {
+  #if (BLINK != 0)
+    receiver.begin(LED_BUILTIN);
+  #else
+    receiver.begin(PIN_NONE);
+  #endif
+}
+
+
 void dcfTask(void* pvParameters) {
   DCFtime mytime;
 
@@ -33,6 +42,6 @@ void dcfTask(void* pvParameters) {
       // u8g2.sendBuffer();					// transfer internal memory to the display
 
     }
-    vTaskDelay(1);
+    vTaskDelay(pdMS_TO_TICKS(20));
   }
 }

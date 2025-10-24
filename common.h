@@ -1,6 +1,10 @@
 #pragma once
 
-#include <WiFi.h>
+#include <Arduino.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#include <freertos/semphr.h>
+//#include <WiFi.h>
 #include <U8g2lib.h>
 #include <dcfrec.h>
 #include <time.h>
