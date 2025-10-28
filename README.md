@@ -17,7 +17,7 @@ The diagram shows the GPS autoinitialization FSM. All UART or hardware failures 
 (outside of the GPS handler block) where manual intervention is required.
 
 ```mermaid
-stateDiagram-v2
+  stateDiagram-v2
     state "GPS handler" as GPS_BLOCK {
       direction TB
 
