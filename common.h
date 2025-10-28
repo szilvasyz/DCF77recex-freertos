@@ -1,4 +1,4 @@
-#include <ctime>
+//#include <ctime>
 #pragma once
 
 #include <Arduino.h>
@@ -25,10 +25,14 @@ extern char buf[MAX_LOG_MSG_LEN];
 extern const char* DWS[];
 extern unsigned long curr, last;
 extern int heartbeat;
-extern time_t lastsynced;
+
+extern struct TzRule DCFrule;
+extern struct TzRule GPSrule;
+extern struct TzRule DISPrule;
 
 extern time_t lastDCFtime;
 extern time_t lastGPStime;
+extern time_t lastsynced;
 
 static inline struct tm makeTm(int year, int month, int day,
                                int hour, int minute, int second = 0)

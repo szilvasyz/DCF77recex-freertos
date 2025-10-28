@@ -20,34 +20,52 @@ char buf[MAX_LOG_MSG_LEN];
 const char* DWS[] = {"-0-", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 unsigned long curr, last;
 int heartbeat = 0;
-time_t lastsynced = 0;
+
+struct TzRule DCFrule;
+struct TzRule GPSrule;
+struct TzRule DISPrule;
 
 time_t lastDCFtime = 0;
 time_t lastGPStime = 0;
+time_t lastsynced = 0;
 
 
 void setup() {
 
-  // WiFi.mode(WIFI_OFF);
-  // btStop();
+  setenv("TZ", "UTC0", 1);
+  tzset();
+
+  struct tm timeinfo = makeTm(2020, 1, 1, 0, 0, 0);
+  time_t now = mktime(&timeinfo);  // Unix időbélyeg
+  struct timeval tv = { now, 0 };
+  settimeofday(&tv, nullptr);  // beállítja a rendszeridőt
+
+  last = millis();
+
+  parseTzString(DCF_TZ, DCFrule);
+  parseTzString(GPS_TZ, GPSrule);
+  parseTzString(DISP_TZ, DISPrule);
 
   tzMutex = xSemaphoreCreateMutex();
   u8g2Mutex = xSemaphoreCreateMutex();
   logQueue = xQueueCreate(MAX_LOG_QUE_LEN, MAX_LOG_MSG_LEN);
 
-  initSysClk();
   initLogger();
   initScr();
   initDcf();
   initGps();
 
-  //xTaskCreate(blinkTask, "Blink", 2048, NULL, 0, NULL);
+  #if (DCF_BLINK == 0)
+    xTaskCreate(blinkTask, "Blink", 2048, NULL, 0, NULL);
+  #endif
   xTaskCreate(loggerTask, "Logger", 2048, NULL, 1, NULL);
   xTaskCreate(scrTask, "Screen refresh", 2048, NULL, 1, NULL);
   xTaskCreate(dcfTask, "DCF receiver", 2048, NULL, 3, NULL);
   xTaskCreate(gpsTask, "GPS receiver", 2048, NULL, 2, NULL);
   xTaskCreate(tzWatchdogTask, "TZ watchdog", 2048, NULL, 1, NULL);
-  //xTaskCreate(gpsCopyTask, "GPS receiver", 2048, NULL, 2, NULL);
+  #if (GPS_COPY != 0)
+    xTaskCreate(gpsCopyTask, "GPS receiver", 2048, NULL, 2, NULL);
+  #endif
 
 }
 
@@ -55,30 +73,5 @@ void setup() {
 void loop() {
 
   vTaskDelay(pdMS_TO_TICKS(DISP_PERIOD_MS));
-  // if (((curr=millis()) - last) >= DISP_PERIOD) {
-  //   last = curr;
-
-    // struct tm timeinfo;
-    // time_t now = time(nullptr);
-    // localtime_r(&now, &timeinfo);
-    // //getLocalTime(&timeinfo, 20);  // lekérdezzük az aktuális időt (fut az ESP32 RTC-je)
-    // strftime(buf, sizeof(buf), "%a %y-%m-%d %H:%M", &timeinfo);
-
-    // xSemaphoreTake(u8g2Mutex, portMAX_DELAY);
-    // u8g2.setCursor(0, 16);
-    // u8g2.print(buf);	// write something to the internal memory
-
-    // strftime(buf, sizeof(buf), "%a %y-%m-%d %H:%M", localtime_r(&lastDCFtime, &timeinfo));
-    // u8g2.setCursor(0, 32);
-    // u8g2.print(buf);	// write something to the internal memory
-
-    // strftime(buf, sizeof(buf), "%a %y-%m-%d %H:%M", localtime_r(&lastGPStime, &timeinfo));
-    // u8g2.setCursor(0, 48);
-    // u8g2.print(buf);	// write something to the internal memory
-
-    // xSemaphoreGive(u8g2Mutex);
-
-    //u8g2.sendBuffer();					// transfer internal memory to the display
-  // }
 
 }

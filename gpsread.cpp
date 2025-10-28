@@ -3,9 +3,7 @@
 
 
 void initGps() {
-  //GPS.begin(GPS_BAUD); // baud megegyezik a moduléval
   GPS.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
-
 }
 
 
@@ -75,14 +73,6 @@ bool parseRMC(const char* sentence, struct tm* out) {
 
   *out = makeTm(2000 + year, month, day, hour, min, sec);
 
-  // memset(out, 0, sizeof(*out));
-  // out->tm_year = year + 100;
-  // out->tm_mon  = month - 1;
-  // out->tm_mday = day;
-  // out->tm_hour = hour;
-  // out->tm_min  = min;
-  // out->tm_sec  = sec;
-
   return true;
 }
 
@@ -99,19 +89,19 @@ void gpsTask(void* pvParameters) {
       if (c == '\n') {
         line[idx] = '\0';
         idx = 0;
-        //xQueueSend(logQueue, line, pdMS_TO_TICKS(10));
 
         if (parseRMC(line, &gps_tm)) {
-          //gpsTime.tm_isdst = -1;
-          time_t utc = utcFromLocal(&gps_tm, "UTC0");
-          lastGPStime = utc;
 
-          timeSetUtc(utc);
-          lastsynced = utc;
+          if (gps_tm.tm_sec == 0) {
+            time_t utc = utcFromLocal(&gps_tm, GPSrule);
+            lastGPStime = utc;
 
-          char msg[64];
-          strftime(msg, sizeof(msg), "GPS sync: %a %y-%m-%d %H:%M", gmtime_r(&utc, &gps_tm));
-          xQueueSend(logQueue, msg, pdMS_TO_TICKS(100));
+            tryTimeSync("GPS", utc);
+
+            char msg[64];
+            strftime(msg, sizeof(msg), "GPS sync: %a %y-%m-%d %H:%M", gmtime_r(&utc, &gps_tm));
+            xQueueSend(logQueue, msg, pdMS_TO_TICKS(100));
+          }
         }
       } else if (idx < sizeof(line)-1) {
         line[idx++] = c;

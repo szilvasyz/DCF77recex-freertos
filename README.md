@@ -9,6 +9,7 @@
 - dcfread.h/cpp - read local time from DCF77 receiver module
 - sysclk.h/cpp - some time/RTC manipulation and synchronization routines
 - gpsread.h/cpp - read UTC time from serial connected GPS module
+- tzwatchdog.h/cpp - timezone watchdog
 
 
 ## GPS handler FSM

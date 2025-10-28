@@ -8,7 +8,6 @@ void blinkTask(void* pvParameters) {
     vTaskDelay(pdMS_TO_TICKS(1000));
     digitalWrite(LED_BUILTIN, LOW);
     vTaskDelay(pdMS_TO_TICKS(1000));
-    //xQueueSend(logQueue, ".", pdMS_TO_TICKS(100));
   }
 }
 

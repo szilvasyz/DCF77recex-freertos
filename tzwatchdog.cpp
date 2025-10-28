@@ -25,21 +25,8 @@ void tzWatchdogTask(void* pvParameters)
         u8g2.print(buf);	// write something to the internal memory
         xSemaphoreGive(u8g2Mutex);
 
-        if (offset != TZ_EXPECTED_OFFSET_SEC) {
-            snprintf(buf, sizeof(buf),
-                     "TZ watchdog: offset mismatch! Δ=%ld sec", offset);
-            xQueueSend(logQueue, buf, portMAX_DELAY);
-
-            // Automatikus korrekció (opcionális)
-            setenv("TZ", "UTC0", 1);
-            tzset();
-            xQueueSend(logQueue, "TZ watchdog: timezone reset to UTC0",
-                       portMAX_DELAY);
-        } else {
-            snprintf(buf, sizeof(buf),
-                     "TZ watchdog: OK (Δ=%ld sec)", offset);
-            xQueueSend(logQueue, buf, portMAX_DELAY);
-        }
+        snprintf(buf, sizeof(buf), "TZ watchdog: Δ=%ld sec, TZ: %s", offset, getenv("TZ"));
+        xQueueSend(logQueue, buf, portMAX_DELAY);
 
         vTaskDelay(pdMS_TO_TICKS(TZ_WATCHDOG_PERIOD_MS));
     }

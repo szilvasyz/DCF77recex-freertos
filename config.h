@@ -17,13 +17,18 @@
 #define GPS_RX_PIN 16     // GPIO pin mapped to RX
 #define GPS_TX_PIN 17     // GPIO pin mapped to TX
 #define GPS_BAUD 115200   // serial communication bitspeed of GPS module
+#define GPS_COPY 0        // copy GPS messages to serial output
+#define GPS_TZ "UTC0"     // timezone for DCF77 receiver
 
 // display parameters
 #define DISP_PERIOD_MS 500    // screen refresh period in milliseconds
 #define DISP_TZ "CET-1CEST,M3.5.0,M10.5.0/3"   // timezone for local time
+//#define DISP_TZ "EST5EDT,M3.2.0/2:00:00,M11.1.0/2:00:00" // USA eastern time
 
 // time sync parameters
-#define SYNC_PERIOD_S 120     // time considered as synchronized in seconds from last sync
+#define SYNC_INTERVAL_SEC   120     // 2 perc
+#define AGING_TIMEOUT_SEC   300     // 5 perc
+#define STALE_TIMEOUT_SEC   600     // 10 perc
 
 // max log message length
 #define MAX_LOG_QUE_LEN 10    // log queue length (number of maximum messages in queue)

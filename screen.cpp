@@ -15,7 +15,7 @@ void initScr() {
   u8g2.setFontMode(0);
 
   u8g2.setCursor(0, 48);
-  u8g2.print("Starting...234567890");	// write something to the internal memory
+  u8g2.print("Starting...");	// write something to the internal memory
   u8g2.sendBuffer();					// transfer internal memory to the display
 
   xSemaphoreGive(u8g2Mutex);
@@ -28,6 +28,7 @@ void scrTask(void* pvParameters) {
   TickType_t lastWakeTime = xTaskGetTickCount();
   const TickType_t period = pdMS_TO_TICKS(DISP_PERIOD_MS);
   struct tm timeinfo;
+  time_t now;
 
   for (;;) {
     vTaskDelayUntil(&lastWakeTime, period);  
@@ -37,24 +38,29 @@ void scrTask(void* pvParameters) {
     xSemaphoreTake(u8g2Mutex, portMAX_DELAY);
     u8g2.setCursor(0,0);
     u8g2.print("*O"[heartbeat]);
-    u8g2.print(" S"[(timeGetUtc() - lastsynced) < SYNC_PERIOD_S]);
+    now = getUtcTime();
+    u8g2.print(" S"[isTimeSyncAging() ? isTimeSynced() ? heartbeat : 0 : 1]);
+    u8g2.print(" D"[now - lastDCFtime < SYNC_INTERVAL_SEC]);
+    u8g2.print(" G"[now - lastGPStime < SYNC_INTERVAL_SEC]);
+    
 
-    //time_t now = time(nullptr);
-    //localtime_r(&now, &timeinfo);
-    //getLocalTime(&timeinfo, 20);  // lekérdezzük az aktuális időt (fut az ESP32 RTC-je)
-    //strftime(buf, sizeof(buf), "%a %y-%m-%d %H:%M", &timeinfo);
-
-    strftime(buf, sizeof(buf), "%a %y-%m-%d %H:%M", timeGetLocal(&timeinfo, DISP_TZ));
+    localFromUtc(now, DISPrule, &timeinfo);
     u8g2.setCursor(0, 16);
+    strftime(buf, sizeof(buf), "%a %y%m%d %H:%M ", &timeinfo);
     u8g2.print(buf);	// write something to the internal memory
+    u8g2.print(timeinfo.tm_isdst ? '*' : ' ');
 
-    strftime(buf, sizeof(buf), "%a %y-%m-%d %H:%M", timeToLocal(&timeinfo, lastDCFtime, DISP_TZ));
+    localFromUtc(lastDCFtime, DISPrule, &timeinfo);
     u8g2.setCursor(0, 32);
+    strftime(buf, sizeof(buf), "%a %y%m%d %H:%M ", &timeinfo);
     u8g2.print(buf);	// write something to the internal memory
+    u8g2.print(timeinfo.tm_isdst ? '*' : ' ');
 
-    strftime(buf, sizeof(buf), "%a %y-%m-%d %H:%M", timeToLocal(&timeinfo, lastGPStime, DISP_TZ));
+    localFromUtc(lastGPStime, DISPrule, &timeinfo);
     u8g2.setCursor(0, 48);
+    strftime(buf, sizeof(buf), "%a %y%m%d %H:%M ", &timeinfo);
     u8g2.print(buf);	// write something to the internal memory
+    u8g2.print(timeinfo.tm_isdst ? '*' : ' ');
 
     xSemaphoreGive(u8g2Mutex);
 
