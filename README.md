@@ -1,39 +1,52 @@
 # DCF77recex-freertos
 
 
-config.h - defines of hardware connections, working parameters
-common.h - references to common resources
-blink.h/cpp - blinking "heartbeat" task
-logger.h/cpp - thread-safe logging to serial output
-screen.h/cpp - basic screen handling and refreshing
-dcfread.h/cpp - read local time from DCF77 receiver module
-sysclk.h/cpp - some time/RTC manipulation and synchronization routines
-gpsread.h/cpp - read UTC time from serial connected GPS module (future)
+- config.h - defines of hardware connections, working parameters
+- common.h - references to common resources
+- blink.h/cpp - blinking "heartbeat" task
+- logger.h/cpp - thread-safe logging to serial output
+- screen.h/cpp - basic screen handling and refreshing
+- dcfread.h/cpp - read local time from DCF77 receiver module
+- sysclk.h/cpp - some time/RTC manipulation and synchronization routines
+- gpsread.h/cpp - read UTC time from serial connected GPS module
 
 
+## GPS handler FSM
+
+The diagram shows the GPS autoinitialization FSM. All UART or hardware failures will force the FSM into the ERROR state
+(outside of the GPS handler block) where manual intervention is required.
 
 ```mermaid
 stateDiagram-v2
-    direction TB
+    state "GPS handler" as GPS_BLOCK {
+      direction TB
 
-    [*] --> DISCONNECTED
+      [*] --> DISCONNECTED : GPS_FAST_START==0
+      [*] --> CONNECTING : GPS_FAST_START==1
 
-    DISCONNECTED : DISCONNECTED<br/><small>várakozás / debounce</small><br/>• Indít 10 s timert<br/>• Timer lejár után döntés CONNECTING vagy REINIT felé
-    DISCONNECTED --> CONNECTING : 10 s letelt
-    DISCONNECTED --> REINIT : 10 s letelt és USE_GPS_REINIT definiálva
-    DISCONNECTED --> ERROR : hardware vagy UART hiba
+      DISCONNECTED : <b>DISCONNECTED</b><br/>prepare for connection</br><small>- delay 10sec (debouncing)</small>
+      REINIT : <b>REINIT</b><br/>set GPS parameters<br/><small>- delay 500ms<br/>- send init commands<br/>- delay 500ms</small>
+      CONNECTING : <b>CONNECTING</b><br/>wait for valid message<br/><small>- open serial connection</small>
+      CONNECTED : <b>CONNECTED</b><br/>processing messages<br/><small>- receiving NMEA message<br/>- processing NMEA message</small>
 
-    REINIT : REINIT<br/><small>GPS újrainicializálás</small><br/>• GPS reset pin LOW<br/>• Várakozás 500 ms<br/>• INIT parancsok küldése<br/>• UART buffer flush<br/>• Kilépés CONNECTING-be
-    REINIT --> CONNECTING : újrainicializálás sikeres
-    REINIT --> ERROR : hardware vagy UART hiba
 
-    CONNECTING : CONNECTING<br/><small>adatvárás</small><br/>• Soros kapcsolat nyitása<br/>• NMEA üzenetek figyelése
-    CONNECTING --> CONNECTED : gps_message_ok()
-    CONNECTING --> DISCONNECTED : timeout (nem jön értelmezhető adat)
-    CONNECTING --> ERROR : hardware vagy UART hiba
+      DISCONNECTED --> REINIT : USE_GPS_REINIT==1
+      DISCONNECTED --> CONNECTING : USE_GPS_REINIT==0
 
-    CONNECTED : CONNECTED<br/><small>stabil adatfolyam</small><br/>• GPS érvényes adatokat küld
-    CONNECTED --> DISCONNECTED : timeout (adatvesztés)
-    CONNECTED --> ERROR : hardware vagy UART hiba
+      REINIT --> CONNECTING
 
-    ERROR : ERROR<br/><small>végállapot</small><br/>• Manuális beavatkozás szükséges
+      CONNECTING --> CONNECTED : new message
+      CONNECTING --> DISCONNECTED : timeout (no message)
+
+      CONNECTED --> DISCONNECTED : timeout (no message)
+
+
+      %% DISCONNECTED --> ERROR : UART error
+      %% REINIT --> ERROR : UART error
+      %% CONNECTING --> ERROR : UART error
+      %% CONNECTED --> ERROR : UART error
+    }
+
+    ERROR : <b>ERROR</b><br/>FSM lands here in case of any failure<br/><small>- manual intervention needed</small>
+
+```

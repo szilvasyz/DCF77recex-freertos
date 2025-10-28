@@ -2,7 +2,6 @@
 
 
 void initLogger() { 
-  logQueue = xQueueCreate(MAX_LOG_QUE_LEN, MAX_LOG_MSG_LEN);
   Serial.begin(LOG_SPEED);
 }
 

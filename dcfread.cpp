@@ -1,8 +1,9 @@
 #include "common.h"
+#include "sysclk.h"
 
 
 void initDcf() {
-  #if (BLINK != 0)
+  #if (DCF_BLINK != 0)
     receiver.begin(LED_BUILTIN);
   #else
     receiver.begin(PIN_NONE);
@@ -11,30 +12,28 @@ void initDcf() {
 
 
 void dcfTask(void* pvParameters) {
-  DCFtime mytime;
+  DCFtime rectime;
+  struct tm dcf_tm;
 
   while(true) {
   
-    receiver.getTime(&mytime);
+    receiver.getTime(&rectime);
 
-    if (mytime.newtime) {
-      struct tm t = {0};
+    if (rectime.newtime) {
+      //struct tm t = {0};
 
-      t.tm_year = mytime.year + 100;  // év - 1900
-      t.tm_mon  = mytime.month - 1;   // hónap (0–11)
-      t.tm_mday = mytime.day;         // nap
-      t.tm_hour = mytime.hour;
-      t.tm_min  = mytime.minute;
-      t.tm_sec  = 0;
+      dcf_tm = makeTm(2000 + rectime.year, rectime.month, rectime.day, rectime.hour, rectime.minute);
+      time_t now = utcFromLocal(&dcf_tm, DCF_TZ); // Unix időbélyeg
 
-      time_t now = mktime(&t);  // Unix időbélyeg
+      lastDCFtime = now;
+      sprintf(buf, "DCF sync epoch: %llu", now);
+      xQueueSend(logQueue, buf, portMAX_DELAY);
+
+      timeSetUtc(now);
       lastsynced = now;
-      struct timeval tv = { now, 0 };
-      settimeofday(&tv, nullptr);  // beállítja a rendszeridőt
 
-      strftime(buf, sizeof(buf), "Received time %a %y-%m-%d %H:%M", &t);
-      // sprintf(buf, "%s %02u-%02u-%02u %02u:%02u", DWS[mytime.dow], mytime.year, mytime.month, mytime.day, mytime.hour, mytime.minute);
-      //Serial.println(buf);
+      strftime(buf, sizeof(buf), "DCF sync time: %a %y-%m-%d %H:%M", gmtime_r(&now, &dcf_tm));
+
       xQueueSend(logQueue, buf, portMAX_DELAY);
 
       // u8g2.setCursor(0, 48);
@@ -42,6 +41,6 @@ void dcfTask(void* pvParameters) {
       // u8g2.sendBuffer();					// transfer internal memory to the display
 
     }
-    vTaskDelay(pdMS_TO_TICKS(20));
+    vTaskDelay(pdMS_TO_TICKS(5));
   }
 }

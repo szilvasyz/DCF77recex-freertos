@@ -8,15 +8,19 @@
 
 // DCF77 receiver settings
 #define DBG 0         // serial debug messages of all received bits
-#define BLINK 0       // bit reception monitor on LED
+#define DCF_BLINK 1   // bit reception monitor on LED
 #define INP_PIN 26    // input pin for signal of DCF77 receiver module
+#define DCF_TZ "CET-1CEST,M3.5.0/2,M10.5.0/3"   // timezone for DCF77 receiver
 
 // GPS receiver settings
 #define GPS_UART 2        // hardware UART number where GPS module is connected to
+#define GPS_RX_PIN 16     // GPIO pin mapped to RX
+#define GPS_TX_PIN 17     // GPIO pin mapped to TX
 #define GPS_BAUD 115200   // serial communication bitspeed of GPS module
 
 // display parameters
 #define DISP_PERIOD_MS 500    // screen refresh period in milliseconds
+#define DISP_TZ "CET-1CEST,M3.5.0,M10.5.0/3"   // timezone for local time
 
 // time sync parameters
 #define SYNC_PERIOD_S 120     // time considered as synchronized in seconds from last sync
