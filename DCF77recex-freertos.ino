@@ -4,13 +4,16 @@
 #include "screen.h"
 #include "sysclk.h"
 #include "dcfread.h"
+//#include "dcf77_rtos.h"
 #include "gpsread.h"
 #include "tzwatchdog.h"
 
 
 HardwareSerial GPS(GPS_UART);  // UART2: GPIO16 (RX2), GPIO17 (TX2)
-DCFrec receiver(INP_PIN, DBG);
 U8G2_SSD1309_128X64_NONAME0_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 5, /* dc=*/13, /* reset=*/ U8X8_PIN_NONE);  
+
+//DCFrec receiver(INP_PIN, DBG);
+DCF77FreeRTOS receiver(INP_PIN, DBG);
 
 QueueHandle_t logQueue;
 SemaphoreHandle_t u8g2Mutex; // Mutex
@@ -55,6 +58,8 @@ void setup() {
   initDcf();
   initGps();
 
+  receiver.begin(LED_BUILTIN);
+
   #if (DCF_BLINK == 0)
     xTaskCreate(blinkTask, "Blink", 2048, NULL, 0, NULL);
   #endif
@@ -71,7 +76,16 @@ void setup() {
 
 
 void loop() {
+  // DCFtime t;
 
-  vTaskDelay(pdMS_TO_TICKS(DISP_PERIOD_MS));
+  // if(receiver.getTime(&t)){
+  //   Serial.printf("%04d-%02d-%02d %02d:%02d (dow=%d)\n",
+  //     t.year,t.month,t.day,t.hour,t.minute,t.dow);
+  // }
+  // vTaskDelay(pdMS_TO_TICKS(50));
+
+  vTaskDelay(pdMS_TO_TICKS(100));
 
 }
+
+

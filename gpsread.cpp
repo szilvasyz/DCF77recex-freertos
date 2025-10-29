@@ -101,6 +101,8 @@ void gpsTask(void* pvParameters) {
             char msg[64];
             strftime(msg, sizeof(msg), "GPS sync: %a %y-%m-%d %H:%M", gmtime_r(&utc, &gps_tm));
             xQueueSend(logQueue, msg, pdMS_TO_TICKS(100));
+            snprintf(msg, sizeof(msg), "lastGPStime: %llu", lastGPStime);
+            xQueueSend(logQueue, msg, pdMS_TO_TICKS(100));
           }
         }
       } else if (idx < sizeof(line)-1) {

@@ -37,11 +37,11 @@ void scrTask(void* pvParameters) {
 
     xSemaphoreTake(u8g2Mutex, portMAX_DELAY);
     u8g2.setCursor(0,0);
-    u8g2.print("*O"[heartbeat]);
+    u8g2.print("* "[heartbeat]);
     now = getUtcTime();
-    u8g2.print(" S"[isTimeSyncAging() ? isTimeSynced() ? heartbeat : 0 : 1]);
-    u8g2.print(" D"[now - lastDCFtime < SYNC_INTERVAL_SEC]);
-    u8g2.print(" G"[now - lastGPStime < SYNC_INTERVAL_SEC]);
+    u8g2.print("_S"[isTimeSyncAging() ? isTimeSynced() ? heartbeat : 0 : 1]);
+    u8g2.print("_D"[now - lastDCFtime < SYNC_INTERVAL_SEC]);
+    u8g2.print("_G"[now - lastGPStime < SYNC_INTERVAL_SEC]);
     
 
     localFromUtc(now, DISPrule, &timeinfo);

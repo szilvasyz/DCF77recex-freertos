@@ -7,14 +7,16 @@
 #include <freertos/semphr.h>
 //#include <WiFi.h>
 #include <U8g2lib.h>
-#include <dcfrec.h>
+//#include <dcfrec.h>
+#include <dcf77_rtos.h>
 #include <time.h>
 
 #include "config.h"
 
 
 extern HardwareSerial GPS;
-extern DCFrec receiver;
+//extern DCFrec receiver;
+extern DCF77FreeRTOS receiver;
 extern U8G2_SSD1309_128X64_NONAME0_F_4W_HW_SPI u8g2;
 
 extern QueueHandle_t logQueue;

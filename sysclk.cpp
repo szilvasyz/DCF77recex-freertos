@@ -149,7 +149,15 @@ long tzOffsetFor(time_t utc, const TzRule& rule, bool* isDst)
     time_t start_t = start_t_local - rule.baseOffset;  // local->UTC
     time_t end_t   = end_t_local   - rule.dstOffset;   // DST->UTC
 
-    bool dstActive = (utc >= start_t && utc < end_t);
+    bool dstActive;
+    
+    if (start_t < end_t) {
+        // normál (északi félteke) logika
+        dstActive = (utc >= start_t && utc < end_t);
+    } else {
+        // déli félteke: átnyúlik az évhatáron
+        dstActive = (utc >= start_t || utc < end_t);
+    }
 
     if (isDst) *isDst = dstActive;
 
